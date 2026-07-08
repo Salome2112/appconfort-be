@@ -17,12 +17,10 @@ export class FurnitureSetsService {
     });
   }
 
-
   findAll(): Promise<FurnitureSet[]> {
     return this.prisma.furnitureSet.findMany(); // ← Directo
   }
 
-  // ✅ CON async (porque usamos await para verificar existencia)
   async findOne(id: number): Promise<FurnitureSet> {
     const furnitureSet = await this.prisma.furnitureSet.findUnique({
       where: { id },

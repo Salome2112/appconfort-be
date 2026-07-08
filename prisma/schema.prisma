@@ -101,6 +101,7 @@ model Product {
 model FurnitureSet {
   id          Int             @id @default(autoincrement())
   sku         String          @unique @db.VarChar(30)
+  name        String          @db.VarChar(150)
   description String?         @db.Text
   isActive    Boolean         @default(true)
 
