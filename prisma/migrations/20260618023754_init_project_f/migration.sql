@@ -16,11 +16,10 @@ CREATE TYPE "ProductCategory" AS ENUM ('LIVING_ROOM', 'DINING_ROOM', 'BEDROOM', 
 -- CreateTable
 CREATE TABLE "clients" (
     "id" SERIAL NOT NULL,
-    "idNumber" VARCHAR(20) NOT NULL,
+    "nui" VARCHAR(20) NOT NULL,
     "firstName" VARCHAR(100) NOT NULL,
     "lastName" VARCHAR(100) NOT NULL,
     "email" VARCHAR(150),
-    "phone" VARCHAR(20),
     "mobile" VARCHAR(20),
     "address" VARCHAR(255),
     "city" VARCHAR(100),
@@ -50,9 +49,7 @@ CREATE TABLE "products" (
 CREATE TABLE "furniture_sets" (
     "id" SERIAL NOT NULL,
     "sku" VARCHAR(30) NOT NULL,
-    "name" VARCHAR(150) NOT NULL,
     "description" TEXT,
-    "category" "ProductCategory" NOT NULL DEFAULT 'OTHER',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -117,9 +114,6 @@ CREATE TABLE "sales_orders" (
     "quoteId" INTEGER NOT NULL,
     "status" "SalesOrderStatus" NOT NULL DEFAULT 'PENDING',
     "quoteTotal" DECIMAL(10,2) NOT NULL,
-    "depositPercent" DECIMAL(5,2) NOT NULL DEFAULT 50,
-    "depositAmount" DECIMAL(10,2) NOT NULL,
-    "deliveryPaymentAmount" DECIMAL(10,2) NOT NULL,
     "pendingBalance" DECIMAL(10,2) NOT NULL,
     "orderDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "agreedDeliveryDate" TIMESTAMP(3),
@@ -135,14 +129,9 @@ CREATE TABLE "sales_orders" (
 CREATE TABLE "payments" (
     "id" SERIAL NOT NULL,
     "salesOrderId" INTEGER NOT NULL,
-    "paymentType" "PaymentType" NOT NULL,
     "paymentMethod" "PaymentMethod" NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
-    "reference" VARCHAR(100),
-    "receiptUrl" VARCHAR(255),
-    "paidAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "notes" TEXT,
-    "registeredBy" VARCHAR(100),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -150,7 +139,7 @@ CREATE TABLE "payments" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "clients_idNumber_key" ON "clients"("idNumber");
+CREATE UNIQUE INDEX "clients_nui_key" ON "clients"("nui");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "products_sku_key" ON "products"("sku");
