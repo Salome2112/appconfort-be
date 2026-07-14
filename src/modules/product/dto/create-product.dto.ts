@@ -3,8 +3,9 @@ import {
   IsOptional,
   IsBoolean,
   IsEnum,
-  IsDecimal,
+  IsNumber,
   MaxLength,
+  Min,
 } from 'class-validator';
 import { ProductCategory } from '@prisma/client';
 
@@ -25,7 +26,8 @@ export class CreateProductDto {
   @IsEnum(ProductCategory)
   category?: ProductCategory;
 
-  @IsDecimal({ decimal_digits: '1,2' })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
   basePrice: number;
 
   @IsOptional()

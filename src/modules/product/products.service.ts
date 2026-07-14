@@ -3,6 +3,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { toNumber } from '../../common/decimal.util';
 
 @Injectable()
 export class ProductsService {
@@ -15,11 +16,10 @@ export class ProductsService {
     });
   }
 
-  // ✅ SIN async (retornamos la Promise directamente)
-  findAll(): Promise<Product[]> {
-    return this.prisma.product.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
+  findAll() {
+    return this.prisma.product
+      .findMany({ orderBy: { id: 'asc' } })
+      .then(toNumber);
   }
 
   // ✅ CON async (necesitamos await para verificar existencia)

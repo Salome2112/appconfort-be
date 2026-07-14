@@ -14,6 +14,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from '@prisma/client';
+import { ProductResponse } from './dto/product-response.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -25,7 +26,7 @@ export class ProductsController {
   }
 
   @Get()
-  findAll(): Promise<Product[]> {
+  findAll(): Promise<ProductResponse[]> {
     return this.productsService.findAll();
   }
 
