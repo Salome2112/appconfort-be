@@ -9,12 +9,20 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from '@prisma/client';
 import { ProductResponse } from './dto/product-response.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { productImageStorage, imageFileFilter, } from '../../common/multer.config';
+
 
 @Controller('products')
 export class ProductsController {
@@ -59,5 +67,25 @@ export class ProductsController {
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     this.productsService.remove(id);
     return Promise.resolve();
+  }
+
+  @Post('upload-image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: productImageStorage,
+      fileFilter: imageFileFilter,
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  uploadImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): { imageUrl: string } {
+    return { imageUrl: `/uploads/products/${file.filename}` };
   }
 }

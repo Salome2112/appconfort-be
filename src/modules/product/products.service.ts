@@ -4,6 +4,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { toNumber } from '../../common/decimal.util';
+import { ProductResponse } from './dto/product-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -68,5 +69,24 @@ export class ProductsService {
     await this.findOne(id); // Lanza NotFoundException si no existe
 
     return this.prisma.product.delete({ where: { id } });
+  }
+
+  async updateImage(
+    id: number,
+    file: Express.Multer.File,
+  ): Promise<ProductResponse> {
+    // Verifica que el producto exista antes de asociarle la imagen
+    await this.findOne(id);
+
+    // Guardamos la URL pública, no la ruta física del disco.
+    // Coincide con el prefix '/uploads' que configuramos en main.ts
+    const imageUrl = `/uploads/products/${file.filename}`;
+
+    const product = await this.prisma.product.update({
+      where: { id },
+      data: { imageUrl },
+    });
+
+    return toNumber(product);
   }
 }

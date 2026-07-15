@@ -30,6 +30,17 @@ export class CreateProductDto {
   @Min(0)
   basePrice: number;
 
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  laborCost: number;
+
+  @IsNumber()
+  profitMargin: number;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
