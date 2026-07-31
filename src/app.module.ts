@@ -10,6 +10,9 @@ import { QuotesModule } from './modules/quote/quotes.module';
 import { QuoteItemsModule } from './modules/quote-item/quote-items.module';
 import { SalesOrdersModule } from './modules/sales-order/sales-orders.module';
 import { PaymentsModule } from './modules/payment/payments.module';
+import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -23,6 +26,8 @@ import { PaymentsModule } from './modules/payment/payments.module';
     QuoteItemsModule,
     SalesOrdersModule,
     PaymentsModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

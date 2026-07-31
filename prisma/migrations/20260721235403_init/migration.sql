@@ -13,6 +13,9 @@ CREATE TYPE "PaymentType" AS ENUM ('DEPOSIT', 'CASH_ON_DELIVERY', 'PARTIAL_PAYME
 -- CreateEnum
 CREATE TYPE "ProductCategory" AS ENUM ('LIVING_ROOM', 'DINING_ROOM', 'BEDROOM', 'OFFICE', 'OUTDOOR', 'OTHER');
 
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'SALES', 'OPERATOR');
+
 -- CreateTable
 CREATE TABLE "clients" (
     "id" SERIAL NOT NULL,
@@ -141,6 +144,21 @@ CREATE TABLE "payments" (
     CONSTRAINT "payments_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "users" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'SALES',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "clients_nui_key" ON "clients"("nui");
 
@@ -161,6 +179,9 @@ CREATE UNIQUE INDEX "sales_orders_number_key" ON "sales_orders"("number");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "sales_orders_quoteId_key" ON "sales_orders"("quoteId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
 ALTER TABLE "set_items" ADD CONSTRAINT "set_items_furnitureSetId_fkey" FOREIGN KEY ("furnitureSetId") REFERENCES "furniture_sets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
