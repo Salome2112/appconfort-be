@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEnum,
   IsNumber,
+  IsInt,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -26,16 +27,35 @@ export class CreateProductDto {
   @IsEnum(ProductCategory)
   category?: ProductCategory;
 
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  basePrice: number;
+  materialCost?: number;
 
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  laborCost: number;
+  laborCost?: number;
 
-  @IsNumber()
-  profitMargin: number;
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  overheadCost?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  profitMargin?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  taxRate?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  finalPrice?: number;
 
   @IsOptional()
   @IsString()

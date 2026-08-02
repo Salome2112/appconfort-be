@@ -85,7 +85,7 @@ export class QuotesService {
     const computedItems: ComputedItem[] = items.map((item, index) => {
       const product = productMap.get(item.productId)!;
       const quantity = item.quantity ?? 1;
-      const unitPrice = item.unitPrice ?? Number(product.basePrice);
+      const unitPrice = item.unitPrice ?? Number(product.finalPrice);
       const itemDiscount = item.discountPercent ?? 0;
 
       const gross = unitPrice * quantity;

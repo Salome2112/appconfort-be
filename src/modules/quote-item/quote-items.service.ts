@@ -104,7 +104,7 @@ export class QuoteItemsService {
       }
 
       const quantity = dto.quantity ?? 1;
-      const unitPrice = dto.unitPrice ?? Number(product.basePrice);
+      const unitPrice = dto.unitPrice ?? Number(product.finalPrice);
       const discountPercent = dto.discountPercent ?? 0;
       const subtotal = round2(
         unitPrice * quantity * (1 - discountPercent / 100),
@@ -161,7 +161,7 @@ export class QuoteItemsService {
             `Producto con id ${dto.productId} no encontrado`,
           );
         }
-        basePrice = Number(product.basePrice);
+        basePrice = Number(product.finalPrice);
       }
 
       const quantity = dto.quantity ?? existing.quantity;

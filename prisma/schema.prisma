@@ -85,16 +85,18 @@ model Product {
   name          String          @db.VarChar(150)
   description   String?         @db.Text
   category      ProductCategory @default(OTHER)
-  basePrice     Decimal         @db.Decimal(10, 2)
-  isActive      Boolean         @default(true)
-  laborCost     Decimal         @default(0.00) @db.Decimal(10, 2)
-  profitMargin  Float           @default(0.00)
   imageUrl      String?         @db.Text
+  isActive      Boolean         @default(true)  
+  materialCost  Decimal         @default(0.00) @db.Decimal(10, 2) 
+  laborCost     Decimal         @default(0.00) @db.Decimal(10, 2) 
+  overheadCost  Decimal         @default(0.00) @db.Decimal(10, 2) 
+  profitMargin  Decimal         @default(0.00) @db.Decimal(5, 2)  
+  taxRate       Int             @default(0)                       
+  finalPrice    Decimal         @default(0.00) @db.Decimal(10, 2) 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-
   setItems      SetItem[]
-  quoteItems QuoteItem[]
+  quoteItems    QuoteItem[]
 
   @@map("products")
 }
