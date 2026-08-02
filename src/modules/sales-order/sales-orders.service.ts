@@ -17,7 +17,7 @@ const withRelations = {
 
 @Injectable()
 export class SalesOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -89,6 +89,20 @@ export class SalesOrdersService {
     return order;
   }
 
+  async findByQuoteId(quoteId: number) {
+    const order = await this.prisma.salesOrder.findUnique({
+      where: { quoteId },
+      include: withRelations,
+    });
+
+    if (!order) {
+      throw new NotFoundException(
+        `Orden de venta para la cotización con id ${quoteId} no encontrada`,
+      );
+    }
+    return order;
+  }
+
   async update(id: number, dto: UpdateSalesOrderDto) {
     const order = await this.findOne(id);
     this.assertTransition(order.status, [
@@ -139,6 +153,33 @@ export class SalesOrdersService {
     return this.prisma.salesOrder.update({
       where: { id },
       data: { status: SalesOrderStatus.VOIDED },
+      include: withRelations,
+    });
+  }
+
+  async complete(id: number) {
+    const order = await this.findOne(id);
+    this.assertTransition(order.status, [
+      SalesOrderStatus.PENDING,
+      SalesOrderStatus.DEPOSIT_PAID,
+      SalesOrderStatus.DELIVERED,
+    ]);
+
+    const totalPayments = order.payments.reduce(
+      (sum, p) => sum + Number(p.amount),
+      0,
+    );
+    const quoteTotal = Number(order.quoteTotal);
+
+    if (Math.abs(totalPayments - quoteTotal) > 0.01) {
+      throw new ConflictException(
+        `No se puede completar la orden: el total pagado ($${totalPayments}) no es igual al total de la venta ($${quoteTotal})`,
+      );
+    }
+
+    return this.prisma.salesOrder.update({
+      where: { id },
+      data: { status: SalesOrderStatus.COMPLETED },
       include: withRelations,
     });
   }

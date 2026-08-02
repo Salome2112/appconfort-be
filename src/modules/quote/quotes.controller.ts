@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -14,6 +15,7 @@ import {
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
+import { UpdateQuoteStatusDto } from './dto/update-quote-status.dto';
 
 @Controller('quotes')
 export class QuotesController {
@@ -63,6 +65,15 @@ export class QuotesController {
   @HttpCode(HttpStatus.OK)
   cancel(@Param('id', ParseIntPipe) id: number) {
     return this.quotesService.cancel(id);
+  }
+
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.OK)
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateQuoteStatusDto,
+  ) {
+    return this.quotesService.updateStatus(id, dto.status);
   }
 
   @Delete(':id')

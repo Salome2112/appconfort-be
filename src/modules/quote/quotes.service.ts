@@ -10,6 +10,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QuoteItemDto } from './dto/quote-item.dto';
+import { SalesOrdersService } from '../sales-order/sales-orders.service';
 
 // include reutilizable para las respuestas
 const withRelations = {
@@ -44,7 +45,10 @@ interface ComputedTotals {
 
 @Injectable()
 export class QuotesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly salesOrdersService: SalesOrdersService,
+  ) { }
 
   // ── Helpers ──────────────────────────────────────────────
 
@@ -148,16 +152,16 @@ export class QuotesService {
         // Si hay ítems, los mapea; si no, el arreglo queda vacío
         items: hasItems
           ? {
-              create: totals.items.map((item) => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                discountPercent: item.discountPercent,
-                subtotal: item.subtotal,
-                customDetails: item.customDetails,
-                sortOrder: item.sortOrder,
-              })),
-            }
+            create: totals.items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              discountPercent: item.discountPercent,
+              subtotal: item.subtotal,
+              customDetails: item.customDetails,
+              sortOrder: item.sortOrder,
+            })),
+          }
           : undefined,
       },
       include: withRelations,
@@ -204,10 +208,10 @@ export class QuotesService {
       dto.taxPercent ??
       (Number(quote.subtotal) - Number(quote.discountAmount) > 0
         ? round2(
-            (Number(quote.taxAmount) /
-              (Number(quote.subtotal) - Number(quote.discountAmount))) *
-              100,
-          )
+          (Number(quote.taxAmount) /
+            (Number(quote.subtotal) - Number(quote.discountAmount))) *
+          100,
+        )
         : 0);
 
     const totals = await this.computeTotals(items, discountPercent, taxPercent);
@@ -238,16 +242,16 @@ export class QuotesService {
           expiresAt,
           items: dto.items
             ? {
-                create: totals.items.map((item) => ({
-                  productId: item.productId,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  discountPercent: item.discountPercent,
-                  subtotal: item.subtotal,
-                  customDetails: item.customDetails,
-                  sortOrder: item.sortOrder,
-                })),
-              }
+              create: totals.items.map((item) => ({
+                productId: item.productId,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                discountPercent: item.discountPercent,
+                subtotal: item.subtotal,
+                customDetails: item.customDetails,
+                sortOrder: item.sortOrder,
+              })),
+            }
             : undefined,
         },
         include: withRelations,
@@ -270,10 +274,20 @@ export class QuotesService {
   async accept(id: number) {
     const quote = await this.findOne(id);
     this.assertTransition(quote.status, [QuoteStatus.SENT]);
-    return this.prisma.quote.update({
-      where: { id },
-      data: { status: QuoteStatus.ACCEPTED, acceptedAt: new Date() },
-      include: withRelations,
+    return this.prisma.$transaction(async (tx) => {
+      const updatedQuote = await tx.quote.update({
+        where: { id },
+        data: { status: QuoteStatus.ACCEPTED, acceptedAt: new Date() },
+        include: withRelations,
+      });
+
+      await this.salesOrdersService.createFromQuote(
+        tx,
+        updatedQuote.id,
+        Number(updatedQuote.total),
+      );
+
+      return updatedQuote;
     });
   }
 
@@ -295,6 +309,27 @@ export class QuotesService {
       data: { status: QuoteStatus.CANCELLED },
       include: withRelations,
     });
+  }
+
+  async updateStatus(id: number, status: QuoteStatus) {
+    switch (status) {
+      case QuoteStatus.SENT:
+        return this.send(id);
+      case QuoteStatus.ACCEPTED:
+        return this.accept(id);
+      case QuoteStatus.REJECTED:
+        return this.reject(id);
+      case QuoteStatus.CANCELLED:
+        return this.cancel(id);
+      case QuoteStatus.DRAFT:
+        return this.prisma.quote.update({
+          where: { id },
+          data: { status: QuoteStatus.DRAFT },
+          include: withRelations,
+        });
+      default:
+        throw new BadRequestException(`Estado no válido: ${status}`);
+    }
   }
 
   async remove(id: number) {

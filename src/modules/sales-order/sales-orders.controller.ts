@@ -18,11 +18,16 @@ import { UpdateSalesOrderDto } from './dto/update-sales-order.dto';
 // DELETE: una orden de venta no se elimina, se anula (VOIDED).
 @Controller('sales-orders')
 export class SalesOrdersController {
-  constructor(private readonly salesOrdersService: SalesOrdersService) {}
+  constructor(private readonly salesOrdersService: SalesOrdersService) { }
 
   @Get()
   findAll() {
     return this.salesOrdersService.findAll();
+  }
+
+  @Get('quote/:quoteId')
+  findByQuoteId(@Param('quoteId', ParseIntPipe) quoteId: number) {
+    return this.salesOrdersService.findByQuoteId(quoteId);
   }
 
   @Get(':id')
@@ -48,5 +53,11 @@ export class SalesOrdersController {
   @HttpCode(HttpStatus.OK)
   void(@Param('id', ParseIntPipe) id: number) {
     return this.salesOrdersService.void(id);
+  }
+
+  @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
+  complete(@Param('id', ParseIntPipe) id: number) {
+    return this.salesOrdersService.complete(id);
   }
 }
