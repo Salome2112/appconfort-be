@@ -55,6 +55,11 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  basePrice?: number;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
   finalPrice?: number;
 
   @IsOptional()

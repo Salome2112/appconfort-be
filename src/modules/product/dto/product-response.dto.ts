@@ -3,12 +3,13 @@ import { Product as PrismaProduct } from '@prisma/client';
 
 export type ProductResponse = Omit<
   PrismaProduct,
-  'materialCost' | 'laborCost' | 'overheadCost' | 'profitMargin' | 'finalPrice'
+  'materialCost' | 'laborCost' | 'overheadCost' | 'profitMargin' | 'basePrice' | 'finalPrice'
 > & {
   materialCost: number;
   laborCost: number;
   overheadCost: number;
   profitMargin: number;
+  basePrice: number;
   finalPrice: number;
 };
 

@@ -1,17 +1,11 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateFurnitureSetDto {
-  @IsString()
-  sku: string;
-
-  @IsString()
-  name: string;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  productIds: number[];
 
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
 }
