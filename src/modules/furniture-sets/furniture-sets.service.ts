@@ -98,9 +98,56 @@ export class FurnitureSetsService {
   ): Promise<FurnitureSet> {
     await this.findOne(id); // Verificar que existe
 
-    return this.prisma.furnitureSet.update({
-      where: { id },
-      data: updateFurnitureSetDto,
+    const { productIds, ...updateData } = updateFurnitureSetDto;
+
+    // Si vienen productIds, verificar que existan todos los productos
+    if (productIds) {
+      const productsCount = await this.prisma.product.count({
+        where: { id: { in: productIds } },
+      });
+      if (productsCount !== productIds.length) {
+        throw new BadRequestException('One or more product IDs are invalid');
+      }
+    }
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Actualizar campos propios del set
+      await tx.furnitureSet.update({
+        where: { id },
+        data: updateData,
+      });
+
+      // 2. Si vienen productIds, reemplazar las relaciones
+      if (productIds) {
+        // Eliminar las relaciones previas
+        await tx.setItem.deleteMany({
+          where: { furnitureSetId: id },
+        });
+
+        // Crear las nuevas relaciones
+        if (productIds.length > 0) {
+          await tx.setItem.createMany({
+            data: productIds.map((productId, index) => ({
+              furnitureSetId: id,
+              productId,
+              quantity: 1,
+              sortOrder: index,
+            })),
+          });
+        }
+      }
+
+      // Devolver el set completo con sus relaciones
+      return tx.furnitureSet.findUnique({
+        where: { id },
+        include: {
+          setItems: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      }) as any;
     });
   }
 
