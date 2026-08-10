@@ -11,7 +11,10 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
-  const allowedOrigins = ['http://localhost:4200'];
+  const allowedOrigins = [
+    'http://localhost:4200',
+    'https://appconfort-fe-deploy-4cc9.vercel.app',
+  ];
   if (process.env['FRONTEND_URL']) {
     allowedOrigins.push(process.env['FRONTEND_URL']);
   }
