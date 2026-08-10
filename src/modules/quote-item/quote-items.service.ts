@@ -28,7 +28,7 @@ export class QuoteItemsService {
     if (!quote) {
       throw new NotFoundException(`Cotización con id ${quoteId} no encontrada`);
     }
-    if (quote.status !== QuoteStatus.DRAFT) {
+    if (quote.status !== QuoteStatus.DRAFT && quote.status !== QuoteStatus.SENT) {
       throw new ConflictException(
         `No se pueden modificar los ítems: la cotización está en estado ${quote.status}`,
       );
@@ -104,7 +104,7 @@ export class QuoteItemsService {
       }
 
       const quantity = dto.quantity ?? 1;
-      const unitPrice = dto.unitPrice ?? Number(product.finalPrice);
+      const unitPrice = dto.unitPrice ?? Number(product.basePrice);
       const discountPercent = dto.discountPercent ?? 0;
       const subtotal = round2(
         unitPrice * quantity * (1 - discountPercent / 100),
@@ -204,12 +204,7 @@ export class QuoteItemsService {
         );
       }
 
-      const itemCount = await tx.quoteItem.count({ where: { quoteId } });
-      if (itemCount <= 1) {
-        throw new ConflictException(
-          'No se puede eliminar el último ítem de una cotización',
-        );
-      }
+
 
       await tx.quoteItem.delete({ where: { id } });
       await this.recalculateQuote(tx, quoteId);

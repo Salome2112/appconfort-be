@@ -1,4 +1,3 @@
-// src/quotes/quotes.controller.ts
 import {
   Controller,
   Get,
@@ -11,7 +10,10 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
@@ -20,6 +22,7 @@ import { UpdateQuoteStatusDto } from './dto/update-quote-status.dto';
 @Controller('quotes')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
+
 
   @Post()
   create(@Body() dto: CreateQuoteDto) {
@@ -80,4 +83,19 @@ export class QuotesController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.quotesService.remove(id);
   }
+
+  @Post(':id/upload-pdf')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadPdf(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ pdfUrl: string }> {
+    const { put } = await import('@vercel/blob');
+    const blob = await put(`proformas/proforma-${id}-${Date.now()}.pdf`, file.buffer, {
+      access: 'public',
+      contentType: 'application/pdf',
+    });
+    return { pdfUrl: blob.url };
+  }
 }
+

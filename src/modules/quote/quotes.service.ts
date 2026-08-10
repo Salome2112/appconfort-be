@@ -188,8 +188,8 @@ export class QuotesService {
 
   async update(id: number, dto: UpdateQuoteDto) {
     const quote = await this.findOne(id);
-    // Solo se puede editar mientras está en borrador
-    this.assertTransition(quote.status, [QuoteStatus.DRAFT]);
+    // Se puede editar si está en borrador o enviada
+    this.assertTransition(quote.status, [QuoteStatus.DRAFT, QuoteStatus.SENT]);
 
     const items =
       dto.items ??
@@ -263,7 +263,7 @@ export class QuotesService {
 
   async send(id: number) {
     const quote = await this.findOne(id);
-    this.assertTransition(quote.status, [QuoteStatus.DRAFT]);
+    this.assertTransition(quote.status, [QuoteStatus.DRAFT, QuoteStatus.SENT]);
     return this.prisma.quote.update({
       where: { id },
       data: { status: QuoteStatus.SENT },
