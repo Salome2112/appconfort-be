@@ -11,11 +11,19 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
+  const allowedOrigins = ['http://localhost:4200'];
+  if (process.env['FRONTEND_URL']) {
+    allowedOrigins.push(process.env['FRONTEND_URL']);
+  }
+
   app.enableCors({
-    origin: [
-      'http://localhost:4200', // Angular en desarrollo
-      // 'https://tu-dominio-produccion.com',
-    ],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
