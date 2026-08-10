@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { put, del } from '@vercel/blob';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from '@prisma/client';
@@ -76,15 +77,25 @@ export class ProductsService {
     file: Express.Multer.File,
   ): Promise<ProductResponse> {
     // Verifica que el producto exista antes de asociarle la imagen
-    await this.findOne(id);
+    const existingProduct = await this.findOne(id);
 
-    // Guardamos la URL pública, no la ruta física del disco.
-    // Coincide con el prefix '/uploads' que configuramos en main.ts
-    const imageUrl = `/uploads/products/${file.filename}`;
+    // Si ya tiene una imagen en Vercel Blob, la eliminamos
+    if (existingProduct.imageUrl && existingProduct.imageUrl.includes('public.blob.vercel-storage.com')) {
+      try {
+        await del(existingProduct.imageUrl);
+      } catch (error) {
+        console.error('Error deleting old image from Vercel Blob:', error);
+      }
+    }
+
+    // Subimos la nueva imagen a Vercel Blob
+    const blob = await put(`products/${id}-${Date.now()}-${file.originalname}`, file.buffer, {
+      access: 'public',
+    });
 
     const product = await this.prisma.product.update({
       where: { id },
-      data: { imageUrl },
+      data: { imageUrl: blob.url },
     });
 
     return toNumber(product);
