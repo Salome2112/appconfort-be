@@ -77,7 +77,7 @@ export class ProductsController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  uploadImage(
+  async uploadImage(
     @UploadedFile(
       new ParseFilePipe({
         validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
@@ -85,7 +85,32 @@ export class ProductsController {
       }),
     )
     file: Express.Multer.File,
-  ): { imageUrl: string } {
-    return { imageUrl: `/uploads/products/${file.filename}` };
+  ): Promise<{ imageUrl: string }> {
+    const { put } = await import('@vercel/blob');
+    const blob = await put(`products/${Date.now()}-${file.originalname}`, file.buffer, {
+      access: 'public',
+    });
+    return { imageUrl: blob.url };
+  }
+
+  @Put(':id/image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: productImageStorage,
+      fileFilter: imageFileFilter,
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
+  updateImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ): Promise<ProductResponse> {
+    return this.productsService.updateImage(id, file);
   }
 }
