@@ -26,7 +26,7 @@ import { productImageStorage, imageFileFilter, } from '../../common/multer.confi
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @Post()
   create(@Body() createProductDto: CreateProductDto): Promise<Product> {
@@ -64,9 +64,8 @@ export class ProductsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    this.productsService.remove(id);
-    return Promise.resolve();
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.productsService.remove(id);
   }
 
   @Post('upload-image')

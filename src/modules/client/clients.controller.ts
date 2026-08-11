@@ -49,8 +49,7 @@ export class ClientsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    this.clientsService.remove(id);
-    return Promise.resolve();
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.clientsService.remove(id);
   }
 }

@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { Client } from '@prisma/client';
+import { Client, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 
 @Injectable()
@@ -19,18 +19,18 @@ export class ClientsService {
   // ✅ SIN async (no usamos await, retornamos la Promise directamente)
   findAll(): Promise<Client[]> {
     return this.prisma.client.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
     });
   }
 
-  // ✅ CON async (usamos await para verificar existencia)
+  // ✅ CON async (usamos await para buscar coincidencia exacta de documento)
   async findOne(id: number): Promise<Client> {
     const client = await this.prisma.client.findUnique({
       where: { id },
     });
 
     if (!client) {
-      throw new NotFoundException(`Client with ID ${id} not found`);
+      throw new NotFoundException(`Cliente con ID ${id} no encontrado`);
     }
 
     return client;
@@ -43,10 +43,7 @@ export class ClientsService {
     });
   }
 
-  // ✅ CON async (usamos await para verificar existencia antes de actualizar)
-  async update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
-    await this.findOne(id); // Lanza NotFoundException si no existe
-
+  update(id: number, updateClientDto: UpdateClientDto): Promise<Client> {
     return this.prisma.client.update({
       where: { id },
       data: updateClientDto,
@@ -57,6 +54,15 @@ export class ClientsService {
   async remove(id: number): Promise<Client> {
     await this.findOne(id); // Lanza NotFoundException si no existe
 
-    return this.prisma.client.delete({ where: { id } });
+    try {
+      return await this.prisma.client.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException(
+          'No se puede eliminar el cliente porque está asociado a cotizaciones existentes.',
+        );
+      }
+      throw error;
+    }
   }
 }

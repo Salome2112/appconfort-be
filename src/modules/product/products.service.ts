@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { put, del } from '@vercel/blob';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { Product } from '@prisma/client';
+import { Product, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { toNumber } from '../../common/decimal.util';
 import { ProductResponse } from './dto/product-response.dto';
@@ -69,7 +69,16 @@ export class ProductsService {
   async remove(id: number): Promise<Product> {
     await this.findOne(id); // Lanza NotFoundException si no existe
 
-    return this.prisma.product.delete({ where: { id } });
+    try {
+      return await this.prisma.product.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException(
+          'No se puede eliminar el producto porque está asociado a cotizaciones existentes.',
+        );
+      }
+      throw error;
+    }
   }
 
   async updateImage(
